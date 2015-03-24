@@ -1,0 +1,25 @@
+.container {
+  position: relative;
+  width: 1024px;
+  height: 100vh;
+  margin: 0 auto;
+}
+
+.questions-wrapper {
+  position: relative;
+  height: 100%;
+}
+
+.question {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.question.active {
+  z-index: 200;
+  opacity: 1;
+}
