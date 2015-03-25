@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   //build question elements DOM structure
   function buildDom() {
-    var $questionDocumentFragment = new DocumentFragment(),
+    var $questionDocumentFragment = document.createDocumentFragment(),
         $questionsWrapper = document.querySelector('.questions-wrapper');
 
     //Create "section.question" element with question text
