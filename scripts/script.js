@@ -1,66 +1,3 @@
-//Mock 14 questions
-function getSemilatticeQuestionsMock() {
-  var questions = [];
-
-  for(var i = 1, k = 1; i < 15; i++) {
-    //if questions are final, add result messages
-    if (i > 8) {
-      questions.push(new Question({
-        id: i,
-        text: "Question " + i + " text",
-        answers: [
-          new Answer({ text: "Answer 1 text", resultText: "Result message " + k + "!"}),
-          new Answer({ text: "Answer 2 text", resultText: "Result message " + ++k + "!"})
-        ]
-      }));
-      //increment Result number counter
-      k++;
-      console.log(questions[i-1].answers[0].resultText);
-      console.log(questions[i-1].answers[1].resultText);
-    } else {
-      questions.push(new Question({
-        id: i,
-        text: "Question " + i + " text",
-        answers: [
-          new Answer({ text: "Answer 1 text" }),
-          new Answer({ text: "Answer 2 text" })
-        ]
-      }));
-      //add third answer to questions
-      //with ID 2 and 4
-      if (i === 2 || i === 4) {
-        questions[questions.length - 1].answers.push(new Answer({ text: "Answer 3 text" }));
-      }
-    }
-  }
-
-  //add "Semilattice" relations only to questions, which are not final.
-  //Questions have next stucture (second part of scheme)
-  //https://oinkerme.files.wordpress.com/2015/01/tree-semilattice.png.
-  //For testing purposes, in "docs" directory of this project you can find same
-  //scheme, but with nodes ID's set corresponding to questions ID's in this app
-  //This way you can visually check if app is running correctly
-  questions[0].answers[0].setNextQuestion(questions[1]);
-  questions[0].answers[1].setNextQuestion(questions[2]);
-  questions[1].answers[0].setNextQuestion(questions[3]);
-  questions[1].answers[1].setNextQuestion(questions[4]);
-  questions[1].answers[2].setNextQuestion(questions[5]);
-  questions[2].answers[0].setNextQuestion(questions[5]);
-  questions[2].answers[1].setNextQuestion(questions[13]);
-  questions[3].answers[0].setNextQuestion(questions[8]);
-  questions[3].answers[1].setNextQuestion(questions[9]);
-  questions[3].answers[2].setNextQuestion(questions[10]);
-  questions[4].answers[0].setNextQuestion(questions[9]);
-  questions[4].answers[1].setNextQuestion(questions[6]);
-  questions[5].answers[0].setNextQuestion(questions[6]);
-  questions[5].answers[1].setNextQuestion(questions[7]);
-  questions[6].answers[0].setNextQuestion(questions[10]);
-  questions[6].answers[1].setNextQuestion(questions[11]);
-  questions[7].answers[0].setNextQuestion(questions[11]);
-  questions[7].answers[1].setNextQuestion(questions[12]);
-
-  return questions;
-}
 
 //Answer model
 function Answer(data) {
@@ -69,10 +6,6 @@ function Answer(data) {
   //next question reference
   self.nextQuestion = data.nextQuestion || undefined;
   self.resultText = data.resultText || "";
-
-  self.setNextQuestion = function(nextQuestion) {
-    self.nextQuestion = nextQuestion;
-  };
 
   //Show either next question if available,
   //or final test result
@@ -117,8 +50,259 @@ function Question(data) {
   };
 }
 
+function getQuestionById(id, questionsList) {
+  for(var i = 0, length = questionsList.length; i < length; i++) {
+    if (questionsList[i].id === id) {
+      return questionsList[i];
+    }
+  }
+  return null;
+}
+
+function parseJSONTestsObject(array) {
+  var questions = [];
+
+  questions = array.map(function(question) {
+    return new Question({
+      id: question.id,
+      text: question.text,
+      answers: question.answers.map(function(answer) {
+        return new Answer({
+          text: answer.text,
+          nextQuestion: answer.nextQuestion,
+          resultText: answer.resultText
+        });
+      })
+    })
+  });
+
+  questions.forEach(function(question) {
+    var nextQuestionId = 0;
+    for(var i = 0, length = question.answers.length; i < length; i++) {
+      nextQuestionId = question.answers[i].nextQuestion;
+
+      if(nextQuestionId) {
+        question.answers[i].nextQuestion = getQuestionById(nextQuestionId, questions);
+      }
+    }
+  });
+
+  return questions;
+}
+
+//Mock for test "WHICH PROGRAMMING LANGUAGE SHOULD I LEARN FIRST?"
+//which can be found by following link
+//http://cdn2.carlcheo.com/wp-content/uploads/2014/12/which-programming-language-should-i-learn-first-infographic.png
+function programmingLanguagesTestMock() {
+  var questionsList = [{
+      id: 1,
+      text: "Why do you want to learn programming?",
+      answers: [{
+        text: "For my kids",
+        resultText: "Start with Scratch, and then move on to Python"
+      }, {
+        text: "Make money",
+        nextQuestion: 2
+      }, {
+        text: "I don't know, just pick one for me",
+        resultText: "Python"
+      }, {
+        text: "Just for fun",
+        nextQuestion: 13
+      }, {
+        text: "I'm interesed",
+        nextQuestion: 13
+      }, {
+        text: "Improve myself",
+        nextQuestion: 13
+      }]
+    }, {
+      id: 2,
+      text: "How do you plan to make money?",
+      answers: [{
+        text: "Get a job",
+        nextQuestion: 3
+      }, {
+        text: "I have a startup idea!",
+        nextQuestion: 11
+      }]
+    }, {
+      id: 3,
+      text: "Which platform/field?",
+      answers: [{
+        text: "I want work for big tech companies",
+        nextQuestion: 4
+      }, {
+        text: "Doesn't matter, I just want $$$",
+        resultText: "Java"
+      }, {
+        text: "Web",
+        nextQuestion: 5
+      }, {
+        text: "Enterprise",
+        nextQuestion: 7
+      }, {
+        text: "Mobile",
+        nextQuestion: 8
+      }, {
+        text: "3D/Gaming",
+        resultText: "C++"
+      }]
+    }, {
+      id: 4,
+      text: "Which of one following companies do you prefer?",
+      answers: [{
+        text: "Facebook",
+        resultText: "Python"
+      }, {
+        text: "Microsoft",
+        resultText: "C#"
+      }, {
+        text: "Apple",
+        resultText: "Objective C"
+      }, {
+        text: "Google",
+        resultText: "Python"
+      }]
+    }, {
+      id: 5,
+      text: "Which side of web-development will you choose?",
+      answers: [{
+        text: "Front-end(web interface)",
+        resultText: "JavaScript"
+      }, {
+        text: "Back-end(\"brain\" behind a website)",
+        nextQuestion: 6
+      }]
+    }, {
+      id: 6,
+      text: "I want to work for...",
+      answers: [{
+        text: "Corporate",
+        nextQuestion: 7
+      }, {
+        text: "Startup",
+        nextQuestion: 9
+      }]
+    }, {
+      id: 7,
+      text: "What do you think about Microsoft?",
+      answers: [{
+        text: "I'm a fan!",
+        resultText: "C#"
+      }, {
+        text: "Not bad",
+        resultText: "Java"
+      }, {
+        text: "Suck",
+        resultText: "Java"
+      }]
+    }, {
+      id: 8,
+      text: "Which OS?",
+      answers: [{
+        text: "iOS",
+        resultText: "Objective C"
+      }, {
+        text: "Android",
+        resultText: "Java"
+      }]
+    }, {
+      id: 9,
+      text: "Do you want to try something new with huge potential, but less mature?",
+      answers: [{
+        text: "YES",
+        resultText: "JavaScript"
+      }, {
+        text: "NOT SURE",
+        nextQuestion: 10
+      }, {
+        text: "NO",
+        nextQuestion: 10
+      }]
+    }, {
+      id: 10,
+      text: "Which one is your favourite toy?",
+      answers: [{
+        text: "Lego",
+        resultText: "Python"
+      }, {
+        text: "Play-Doh",
+        resultText: "Ruby"
+      }, {
+        text: "I've an old & ugly toy, but I love it so much!",
+        resultText: "PHP"
+      }]
+    }, {
+      id: 11,
+      text: "Which platform/field?",
+      answers: [{
+        text: "3D/Gaming",
+        resultText: "C++"
+      }, {
+        text: "Mobile",
+        nextQuestion: 8
+      }, {
+        text: "Enterprise",
+        nextQuestion: 7
+      }, {
+        text: "Web",
+        nextQuestion: 12
+      }]
+    }, {
+      id: 12,
+      text: "Does your web app provides info in real-time, like twitter?",
+      answers: [{
+        text: "YES",
+        resultText: "JavaScript"
+      }, {
+        text: "NO",
+        nextQuestion: 9
+      }]
+    }, {
+      id: 13,
+      text: "Have a brilliant idea/platform in mind?",
+      answers: [{
+        text: "Nope. Just want to get started",
+        nextQuestion: 14
+      }, {
+        text: "YES",
+        nextQuestion: 11
+      }]
+    }, {
+      id: 14,
+      text: "I prefer to learn things...",
+      answers: [{
+        text: "The easy way",
+        resultText: "Python"
+      }, {
+        text: "The best way",
+        resultText: "Python"
+      }, {
+        text: "The slightly harder way",
+        nextQuestion: 15
+      }, {
+        text: "The really hard way (but easier to pick up other languages in the future)",
+        resultText: "C++"
+      }]
+    }, {
+      id: 15,
+      text: "Auto or manual car?",
+      answers: [{
+        text: "Auto",
+        resultText: "Java"
+      }, {
+        text: "Manual",
+        resultText: "C"
+      }]
+    }
+  ];
+
+  return parseJSONTestsObject(questionsList);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-  var questions = getSemilatticeQuestionsMock();
+  var questions = programmingLanguagesTestMock();
 
   //build question elements DOM structure
   function buildDom() {
